@@ -1,0 +1,147 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates EC2 servers
+
+Parameters:
+  TemplatePath:
+    Type: String
+    Description: S3Bucket Path where the templates are stored
+    Default: mynestedcftt
+  VPCID:
+    Type: String
+    Description: Enter a valid VPC Id
+    Default: vpc-3a3d2440
+  PrivateSubnet1:
+    Type: String
+    Description: Enter a valid SubnetId of private subnet in AZ1
+    Default: subnet-d931ac94
+  PrivateSubnet2:
+    Type: String
+    Description: Enter a valid SubnetId of private subnet in AZ2
+    Default: subnet-cde62bab
+  PublicSubnet1:
+    Type: String
+    Description: Enter a valid SubnetId of public subnet in AZ1
+    Default: subnet-c39a51e2
+  PublicSubnet2:
+    Type: String
+    Description: Enter a valid SubnetId of public subnet in AZ2
+    Default: subnet-b479698a
+   #KeyPair:
+   # Type: "AWS::EC2::KeyPair::KeyName"
+    #Description: Enter a valid KeyPair Name
+  AMIId:
+    Type: String
+    Description: Enter a valid AMI ID to launch the instance
+    Default: ami-08f3d892de259504d
+  InstanceType:
+    Type: String
+    Description: Enter one of the possible instance type for web server
+    Default: t2.micro
+  Environment:
+    Type: String
+    Description: Select the appropriate environment
+    Default: Development
+    
+
+Resources:
+  #####VPC Group
+  #VPCStack:
+   # Type: "AWS::CloudFormation::Stack"
+    #Properties:
+     # TemplateURL:
+      #  Fn::Sub: "https://${TemplatePath}.s3.amazonaws.com/vpc-stack.yml"
+      #Parameters:
+       # VPCID: !Ref VPCID
+        #Environment: !Ref Environment
+        #PublicSubnetA: !Ref PublicSubnet1
+        #PublicSubnetB: !Ref PublicSubnet2
+        #PrivateSubnetA: !Ref PrivateSubnet1
+        #PrivateSubnetB: !Ref PrivateSubnet2
+      #Tags:
+       # - Key: Name
+       #   Value: VPCGroupStack
+
+  ####Security Group
+  SGStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub: "https://${TemplatePath}.s3.amazonaws.com/sg-stack.yml"
+      Parameters:
+        VPCID: !Ref VPCID
+        Environment: !Ref Environment
+      Tags:
+        - Key: Name
+          Value:   SecurityGroupStack
+
+  ####Application Ec2 instances group
+  APPStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub: "https://${TemplatePath}.s3.amazonaws.com/app-stack.yml"
+      Parameters:
+        VPCID: !Ref VPCID
+        Environment: !Ref Environment
+        PublicSubnetA: !Ref PublicSubnet1
+        PublicSubnetB: !Ref PublicSubnet2
+        PrivateSubnetA: !Ref PrivateSubnet1
+        PrivateSubnetB: !Ref PrivateSubnet2
+        AMIId: !Ref AMIId
+        InstanceType: !Ref InstanceType
+        APPSG: !GetAtt SGStack.Outputs.APPSGID
+        #LBSG: !GetAtt SGStack.Outputs.ALBSGID  
+      Tags:
+        - Key: Name
+          Value: ApplicationStack
+          
+  ####Application Loadbalancer group  
+  ALBStack:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:
+        Fn::Sub: "https://${TemplatePath}.s3.amazonaws.com/alb-stack.yml"
+      Parameters:
+        VPCID: !Ref VPCID
+        Environment: !Ref Environment
+        PublicSubnetA: !Ref PublicSubnet1
+        PublicSubnetB: !Ref PublicSubnet2
+        PrivateSubnetA: !Ref PrivateSubnet1
+        PrivateSubnetB: !Ref PrivateSubnet2
+        #APPSG: !GetAtt SGStack.Outputs.APPSGID
+        LBSG: !GetAtt SGStack.Outputs.ALBSGID
+        AppInstance1: !GetAtt APPStack.Outputs.AppInstance1
+        AppInstance2: !GetAtt  APPStack.Outputs.AppInstance2
+      Tags:
+        - Key: Name
+          Value: LoadBalancerStack
+
+  
+Outputs:
+  Stackinfo:
+    Description: Ec2 Main stack info
+    Value:
+      !Ref APPStack
+  AppInstance1:
+    Description: AppInstance1  
+    Value:
+      !GetAtt APPStack.Outputs.AppInstance1
+  AppInstance2:
+    Description: AppInstance2  
+    Value:
+      !GetAtt APPStack.Outputs.AppInstance2
+  Ec2SecurityGroupID:
+    Description: ec2 SG 
+    Value:
+      !GetAtt SGStack.Outputs.APPSGID
+  ALBSecurityGroupID:
+    Description: ALB SG 
+    Value:
+      !GetAtt SGStack.Outputs.ALBSGID
+  ALB:
+    Description: ALB
+    Value:
+      !GetAtt ALBStack.Outputs.ALBDNSName
+  
+  
+         

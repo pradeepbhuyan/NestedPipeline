@@ -1,0 +1,13 @@
+{
+  "Parameters" : {
+    "VPCID": "vpc-3a3d2440",
+    "PrivateSubnet1": "subnet-d931ac94",
+    "PrivateSubnet2": "subnet-cde62bab",
+    "PublicSubnet1": "subnet-abcd1bbb",
+    "PublicSubnet2": "subnet-9069abcd",
+    "S3BucketName": "mynestedcftt",
+    "AMIId": "ami-e5083683",
+    "InstanceType": "t2.micro",
+    "Environment": "test"
+  }
+}

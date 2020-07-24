@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates VPC & Subnets
+
+Parameters: 
+
+  VPCID: 
+    Description: VPC ID
+    Type: String
+    
+  Environment:
+    Type: String
+    Description: Specifies the application environment.
+  
+  PublicSubnetA:
+    Type: String
+    Description: Specifies the application public subnetA.
+   
+  PublicSubnetB:
+    Type: String
+    Description: Specifies the application public subnetB.
+    
+  PrivateSubnetA:
+    Type: String
+    Description: Specifies the application  private subnetA.
+   
+  PrivateSubnetB:
+    Type: String
+    Description: Specifies the application private subnetB.
+    
+
+Outputs:
+
+  VPCID:
+    Description: Custom VPCID
+    Value:
+      !Ref VPCID
+
+  PublicSubnetA:
+    Description: VPC Public subnetA
+    Value:
+      !Ref PublicSubnetA
+      
+  PublicSubnetB:
+    Description: VPC Public subnetB
+    Value:
+      !Ref PublicSubnetB
+      
+  
+  PrivateSubnetA:
+    Description: VPC Public subnetA
+    Value:
+      !Ref PrivateSubnetA
+      
+  PrivateSubnetB:
+    Description: VPC Public subnetB
+    Value:
+      !Ref PrivateSubnetB
+
+  InternetGateway:
+    Description: VPC IGW
+    Value:
+      !Ref InternetGateway
+  

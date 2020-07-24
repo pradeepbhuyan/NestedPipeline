@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates EC2 servers
+
+Parameters: 
+  VPCID: 
+    Description: VPC ID
+    Type: String
+    
+  Environment:
+    Type: String
+    Description: Specifies the application environment.
+  
+  PublicSubnetA:
+    Type: String
+    Description: Specifies the application public subnetA.
+   
+  PublicSubnetB:
+    Type: String
+    Description: Specifies the application public subnetB.
+    
+  PrivateSubnetA:
+    Type: String
+    Description: Specifies the application  private subnetA.
+   
+  PrivateSubnetB:
+    Type: String
+    Description: Specifies the application private subnetB.
+
+  AMIId: 
+    Type: String
+    Description: Enter a valid AMI ID to launch the instance
+
+  InstanceType:
+    Type: String
+    Description: Enter one of the possible instance type for web server
+  
+  APPSG:
+    Type: String
+    Description: Specifies the application SG.
+  
+
+Resources: 
+
+  DemoAppInstance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 20
+            VolumeType: gp2
+            Encrypted: true
+        - DeviceName: /dev/sdb
+          Ebs:
+            VolumeSize: 10
+            VolumeType: gp2
+            Encrypted: true
+      ImageId: !Ref AMIId
+      InstanceInitiatedShutdownBehavior: stop
+      InstanceType: !Ref InstanceType
+      #KeyName: 'AWSDEMO'
+      Monitoring: 'false' 
+      SubnetId: !Ref PublicSubnetA
+      SecurityGroupIds:
+        - !Ref APPSG
+      Tenancy: default
+      UserData:
+        Fn::Base64: !Sub |
+            #!/bin/bash
+            yum install httpd -y
+            echo "App Instance1" > /var/www/html/index.html
+            service httpd start
+            chkconfig httpd on
+      
+      Tags:
+        -
+          Key: Name
+          Value: AppInstance1
+            
+
+  ############App instance2
+  DemoAppInstance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      BlockDeviceMappings:
+        -
+          DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 20
+            VolumeType: gp2
+            Encrypted: true
+        - DeviceName: /dev/sdb
+          Ebs:
+            VolumeSize: 10
+            VolumeType: gp2
+            Encrypted: true
+      ImageId: !Ref AMIId
+      #IamInstanceProfile: AAMC-EC2FullAccess
+      InstanceInitiatedShutdownBehavior: stop
+      InstanceType: !Ref InstanceType
+      #KeyName: 'AWSDEMO'
+      Monitoring: 'false' #subnet-008c4b6b
+      SubnetId: !Ref PublicSubnetB
+      SecurityGroupIds:
+        - !Ref APPSG
+      Tenancy: default
+      UserData:
+        Fn::Base64: !Sub |
+            #!/bin/bash
+            yum install httpd -y
+            echo "App Instance2" > /var/www/html/index.html
+            service httpd start
+            chkconfig httpd on
+      Tags:
+        -
+          Key: Name
+          Value: AppInstance2
+            
+
+Outputs:
+
+  AppInstance1:
+    Description: Ec2 instance1 
+    Value:
+      !Ref DemoAppInstance1
+  Ec2SecurityGroupID:
+    Description: ec2 App SG 
+    Value:
+      !Ref APPSG
+  AppInstance2:
+    Description:  Ec2 instance2
+    Value:
+      !Ref DemoAppInstance2
+         

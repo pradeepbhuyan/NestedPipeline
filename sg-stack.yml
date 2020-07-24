@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates EC2,ALB securitygroup
+
+Parameters: 
+
+  VPCID: 
+    Description: VPC ID
+    Type: String
+    
+  Environment:
+    Type: String
+    Description: Specifies the application environment.
+
+Resources:  
+  EC2APP:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'Allowing Internal SSH and application ports - 22,80,8080'
+      VpcId: !Ref VPCID
+         
+      Tags:
+        - Key: Name
+          Value: DemoApp-EC2-SG
+          
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+          
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          CidrIp: 0.0.0.0/0  
+
+          
+        - IpProtocol: icmp
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: 0.0.0.0/0
+
+
+ 
+  # ELB Security Group allowing Port 80 from anywhere
+  ALBHttp:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Port 80, 443, and ICMP
+      VpcId: !Ref VPCID
+       
+      Tags:
+        - Key: Name
+          Value: DemoAppApp-ALB-SG
+          
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+
+Outputs:
+
+  APPSGID:
+    Description: sg for app instances 
+    Value:
+      !Ref EC2APP
+  ALBSGID:
+    Description: sg for ALB  
+    Value:
+      !Ref ALBHttp
+         

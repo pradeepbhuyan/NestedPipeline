@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates EC2 servers
+
+Parameters: 
+  VPCID: 
+    Description: VPC ID
+    Type: String
+    
+  Environment:
+    Type: String
+    Description: Specifies the application environment.
+  
+  PublicSubnetA:
+    Type: String
+    Description: Specifies the application public subnetA.
+   
+  PublicSubnetB:
+    Type: String
+    Description: Specifies the application public subnetB.
+    
+  PrivateSubnetA:
+    Type: String
+    Description: Specifies the application  private subnetA.
+   
+  PrivateSubnetB:
+    Type: String
+    Description: Specifies the application private subnetB.
+
+  AppInstance1:
+    Type: String
+    Description: Specifies the application instance1.
+  
+  AppInstance2:
+    Type: String
+    Description: Specifies the application instance2.
+
+  LBSG:
+    Type: String
+    Description: Specifies the application SG.
+  
+
+Resources: 
+  DemoAppLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      LoadBalancerAttributes:
+        - Key: deletion_protection.enabled
+          Value: false  # change this to true. This will add extra security net from deleting this ALB.
+      Name: DemoAppALB
+      Scheme: internet-facing
+      Subnets: 
+        - !Ref PublicSubnetA
+        - !Ref PublicSubnetB
+
+      SecurityGroups:
+        - !Ref LBSG
+
+  ############# TARGET GROUPS ####
+  # TG: App
+  DemoAppTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: 'APP-TG1'
+      HealthCheckIntervalSeconds: 9
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 3
+      HealthyThresholdCount: 5
+      HealthCheckPath: '/'     
+      Matcher:
+        HttpCode: '200'
+      Port: 80
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: '20'
+      Targets:
+        - Id:
+            !Ref AppInstance1
+          Port: 80
+        - Id:
+            !Ref AppInstance2
+          Port: 80
+      UnhealthyThresholdCount: 3
+      VpcId: !Ref VPCID
+        
+    
+  # ALB LISTENER: DemoApp.aamc.org
+  DemoAppHTTPListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - RedirectConfig:
+            Host: "#{host}"
+            Path: "/#{path}"
+            Port: 443
+            Protocol: "HTTPS"
+            Query: "#{query}"
+            StatusCode: HTTP_301
+          Type: redirect
+      LoadBalancerArn:
+        !Ref DemoAppLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  DemoAppListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref DemoAppTG
+      Conditions:
+        - Field: host-header
+          Values: 
+            - !GetAtt DemoAppLoadBalancer.DNSName
+      ListenerArn: !Ref DemoAppHTTPListener
+      Priority: 1
+      
+Outputs:
+  
+  ALBDNSName:
+    Description: ALBURL 
+    Value:
+      !Ref DemoAppLoadBalancer.DNSName
+
+         
