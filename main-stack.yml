@@ -66,7 +66,8 @@ Resources:
     Type: "AWS::CloudFormation::Stack"
     Properties:
       TemplateURL:
-        Fn::Sub: "https://${TemplatePath}.s3.amazonaws.com/sg-stack.yml"
+        #Fn::Sub: "https://${TemplatePath}.s3.amazonaws.com/sg-stack.yml"
+        Fn::Sub: "sg-stack.yml"
       Parameters:
         VPCID: !Ref VPCID
         Environment: !Ref Environment
@@ -79,7 +80,8 @@ Resources:
     Type: "AWS::CloudFormation::Stack"
     Properties:
       TemplateURL:
-        Fn::Sub: "https://${TemplatePath}.s3.amazonaws.com/app-stack.yml"
+        #Fn::Sub: "https://${TemplatePath}.s3.amazonaws.com/app-stack.yml"
+        Fn::Sub: "app-stack.yml"
       Parameters:
         VPCID: !Ref VPCID
         Environment: !Ref Environment
@@ -100,7 +102,8 @@ Resources:
     Type: "AWS::CloudFormation::Stack"
     Properties:
       TemplateURL:
-        Fn::Sub: "https://${TemplatePath}.s3.amazonaws.com/alb-stack.yml"
+        #Fn::Sub: "https://${TemplatePath}.s3.amazonaws.com/alb-stack.yml"
+        Fn::Sub: "alb-stack.yml"
       Parameters:
         VPCID: !Ref VPCID
         Environment: !Ref Environment
